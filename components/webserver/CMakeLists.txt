@@ -1,0 +1,38 @@
+idf_component_register(
+    SRCS
+        "webserver.c"
+        "routes.c"
+        "api.c"
+        "api_status.c"
+        "api_config.c"
+        "api_wifi_scan.c"
+        "api_shelly_discover.c"
+        "api_ota.c"
+        "api_logs.c"
+        "api_system.c"
+        "api_reboot.c"
+        "api_energy.c"
+        "api_watchdog.c"
+        "api_health.c"
+        "api_shelly.c"
+        "json_utils.c"
+        
+    INCLUDE_DIRS
+        "include"
+
+    REQUIRES
+        spiffs
+        esp_http_server
+        logger
+        wifi_manager
+        power_manager
+        config
+        rs485
+        shelly
+        watchdog
+        json
+        mdns
+        app_update
+        nvs_flash
+        esp_hw_support
+)

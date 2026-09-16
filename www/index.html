@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>TWC Controller · Réglages</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#10151c;color:#f0f3f7}
+    *{box-sizing:border-box}body{margin:0;padding:28px 18px 60px}main{max-width:860px;margin:auto}
+    h1{font-size:clamp(1.8rem,5vw,2.7rem);letter-spacing:-.04em;margin:8px 0 6px}h2{font-size:1.1rem;margin:0 0 8px}
+    p{color:#aab5c3;line-height:1.5;margin:6px 0 18px}small{color:#aab5c3;line-height:1.4;display:block;margin-top:7px}
+    .eyebrow{font-size:.75rem;color:#7daccd;text-transform:uppercase;letter-spacing:.16em;font-weight:700}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
+    .card{border:1px solid #2b3948;border-radius:15px;padding:22px;background:#1b2530;box-shadow:0 10px 28px #090f1840}
+    .wide{grid-column:1/-1}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    label{display:block;font-size:.86rem;font-weight:650;margin:0 0 7px;color:#e3eaf3}
+    input,select{width:100%;border:1px solid #415165;border-radius:9px;background:#111b26;color:#fff;padding:11px 12px;font:inherit;min-height:44px}
+    input:focus,select:focus,button:focus-visible{outline:2px solid #73c5fa;outline-offset:2px}
+    .field{margin:0 0 16px}.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}
+    button{border:0;border-radius:9px;background:#f05a50;color:#171719;font-weight:750;padding:11px 17px;min-height:44px;cursor:pointer}
+    button.secondary{background:#344758;color:#f2f6fa}button:disabled{opacity:.55;cursor:wait}
+    .metric{font-size:1.5rem;font-weight:750;letter-spacing:-.03em}.muted{color:#aab5c3}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.stat{padding:12px 14px;background:#111b26;border-radius:10px}
+    .stat span{display:block;color:#aab5c3;font-size:.8rem;margin-bottom:6px}
+    #notice{min-height:24px;padding:12px 14px;border-radius:10px;margin-top:16px;background:#26374b;display:none;white-space:pre-wrap}
+    #notice.error{background:#512b30;color:#ffe4e3}#notice.show{display:block}
+    .hint{border-left:3px solid #7daccd;padding-left:12px;margin-top:12px}
+    @media(max-width:650px){.grid,.fields,.stats{grid-template-columns:1fr}.wide{grid-column:auto}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">TWC Controller / configuration</div>
+  <h1>Piloter l’installation</h1>
+  <p>Réseau, compteur Shelly et limites de courant depuis une seule page.</p>
+  <div id="notice" role="status" aria-live="polite"></div>
+
+  <form class="card wide" id="auth-form">
+    <h2>Accès administrateur</h2>
+    <p>Saisir le jeton affiché sur la console série au démarrage. Il reste uniquement dans cet onglet.</p>
+    <div class="fields">
+      <div class="field"><label for="admin-token">Jeton administrateur</label>
+        <input id="admin-token" type="password" minlength="32" maxlength="32" autocomplete="off" required></div>
+    </div>
+    <div class="actions"><button type="submit">Déverrouiller</button></div>
+  </form>
+
+  <section class="card wide" aria-label="État actuel">
+    <h2>État actuel</h2>
+    <div class="stats">
+      <div class="stat"><span>Wi-Fi</span><strong id="wifi-state" class="metric">—</strong></div>
+      <div class="stat"><span>Mesure Shelly</span><strong id="meter-state" class="metric">—</strong></div>
+      <div class="stat"><span>Limite calculée</span><strong id="charge-state" class="metric">—</strong></div>
+    </div>
+    <small id="device-details">Chargement de l’état…</small>
+  </section>
+
+  <div class="grid">
+    <form class="card" id="wifi-form">
+      <h2>Réseau Wi-Fi</h2>
+      <p>Choisir un réseau détecté ou saisir son nom.</p>
+      <div class="field"><label for="networks">Réseaux détectés</label>
+        <select id="networks"><option value="">Choisir un réseau…</option></select></div>
+      <div class="field"><label for="ssid">Nom du réseau (SSID)</label>
+        <input id="ssid" name="wifi_ssid" maxlength="31" autocomplete="off" required></div>
+      <div class="field"><label for="password">Mot de passe</label>
+        <input id="password" type="password" maxlength="63" autocomplete="new-password" placeholder="Laisser vide pour conserver l’actuel">
+        <small>Sur un nouveau réseau sans mot de passe, laisser ce champ vide.</small></div>
+      <div class="actions"><button type="button" class="secondary" id="scan">Rechercher</button><button type="submit">Enregistrer le Wi-Fi</button></div>
+      <small class="hint">Après un changement de réseau, l’adresse IP de cette page peut changer. Retrouver le contrôleur sur le nouveau Wi-Fi.</small>
+    </form>
+
+    <form class="card" id="shelly-form">
+      <h2>Compteur Shelly</h2>
+      <p>Rechercher un compteur sur le réseau local, choisir une adresse mémorisée ou saisir son IP.</p>
+      <div class="field"><label for="discovered-hosts">Shelly découverts sur le réseau local</label>
+        <select id="discovered-hosts"><option value="">Lancer la recherche…</option></select>
+        <small>La découverte mDNS reste limitée au réseau local ; saisir l’IP si le Shelly est sur un autre VLAN.</small></div>
+      <div class="field"><label for="shelly-phase">Phase mesurée pour le pilotage</label>
+        <select id="shelly-phase"><option value="0">Triphasé · phase la plus chargée</option><option value="1">Monophasé · pince A</option><option value="2">Monophasé · pince B</option><option value="3">Monophasé · pince C</option></select>
+        <small>En monophasé, choisir la pince sur la phase qui alimente le Wall Connector. Repasser en triphasé après modification du câblage.</small></div>
+      <div class="field"><label for="saved-hosts">Adresses mémorisées dans ce navigateur</label>
+        <select id="saved-hosts"><option value="">Choisir une adresse…</option></select></div>
+      <div class="field"><label for="host">Adresse IP ou nom du Shelly</label>
+        <input id="host" name="shelly_host" maxlength="63" autocomplete="off" placeholder="172.16.55.36" required>
+        <small id="active-host">Adresse utilisée : —</small></div>
+      <div class="actions"><button type="button" class="secondary" id="discover">Rechercher les Shelly</button><button type="submit">Enregistrer le Shelly</button></div>
+      <small class="hint">La détection redémarre après l’enregistrement. Un appareil inaccessible laisse la mesure invalide et la charge désactivée.</small>
+    </form>
+
+    <form class="card wide" id="ota-form">
+      <h2>Mise à jour du firmware (OTA)</h2>
+      <p>Sélectionner le fichier <code>build/twc-controller.bin</code>. Le jeton administrateur saisi en haut de page protège aussi la mise à jour.</p>
+      <div class="fields">
+        <div class="field"><label for="firmware">Firmware .bin</label><input id="firmware" type="file" accept=".bin,application/octet-stream" required></div>
+      </div>
+      <div class="actions"><button type="submit" id="ota-submit">Mettre à jour et redémarrer</button></div>
+      <small id="ota-state">Le firmware OTA ne modifie pas l’interface SPIFFS. Premier passage : flash série obligatoire.</small>
+    </form>
+
+    <form class="card wide" id="limits-form">
+      <h2>Limites de charge</h2>
+      <p>Les valeurs sont en ampères par phase, en monophasé comme en triphasé.</p>
+      <div class="fields">
+        <div class="field"><label for="breaker">Disjoncteur d’abonné (A / phase)</label>
+          <input id="breaker" type="number" min="6" max="63" step="1" required></div>
+        <div class="field"><label for="maximum">Départ Wall Connector (A / phase)</label>
+          <input id="maximum" type="number" min="6" max="32" step="1" required></div>
+        <div class="field"><label for="minimum">Courant minimal de charge (A)</label>
+          <input id="minimum" type="number" min="6" max="32" step="1" required></div>
+      </div>
+      <small class="hint">Le courant demandé reste plafonné à la limite du départ Wall Connector. Vérifier également son réglage interne.</small>
+      <div class="actions"><button type="submit">Enregistrer les limites</button></div>
+    </form>
+  </div>
+</main>
+<script>
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const notice = (message, error=false) => {
+    $('notice').textContent = message;
+    $('notice').className = 'show' + (error ? ' error' : '');
+  };
+  const number = value => Number.isFinite(Number(value)) ? Number(value).toFixed(2) : '—';
+  let adminToken = sessionStorage.getItem('twc-admin-token') || '';
+  $('admin-token').value = adminToken;
+
+  async function api(path, options) {
+    if (!adminToken) throw new Error('Jeton administrateur requis');
+    const headers = {...(options?.headers || {}), Authorization:`Bearer ${adminToken}`};
+    const response = await fetch(path, {cache:'no-store', ...options, headers});
+    if (response.status === 401) {
+      sessionStorage.removeItem('twc-admin-token');
+      adminToken = '';
+    }
+    if (!response.ok) throw new Error((await response.text()) || `HTTP ${response.status}`);
+    return response.json();
+  }
+  async function save(form, changes, success) {
+    const button = form.querySelector('button[type=submit]');
+    button.disabled = true;
+    try {
+      await api('/api/config', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(changes)
+      });
+      notice(success);
+      await loadConfig();
+    } catch (error) {
+      notice(`Enregistrement non confirmé : ${error.message}. Relire /api/config avant de réessayer.`, true);
+    } finally { button.disabled = false; }
+  }
+  async function loadConfig() {
+    const cfg = await api('/api/config');
+    $('ssid').value = cfg.wifi_ssid || '';
+    $('host').value = cfg.shelly_host || cfg.shelly_active_host || '';
+    $('shelly-phase').value = String(cfg.shelly_phase ?? 0);
+    $('active-host').textContent = `Adresse utilisée : ${cfg.shelly_active_host || '—'}`;
+    $('breaker').value = cfg.breaker_limit;
+    $('minimum').value = cfg.charger_min_current;
+    $('maximum').value = cfg.charger_max_current;
+    updateHosts(cfg.shelly_active_host);
+    $('ota-submit').disabled = !cfg.ota_enabled;
+    $('ota-state').textContent = cfg.ota_enabled ? 'Le firmware OTA ne modifie pas SPIFFS. Premier passage : flash série obligatoire.' : 'OTA désactivé dans la configuration.';
+  }
+  async function refreshStatus() {
+    try {
+      const [status, shelly] = await Promise.all([api('/api/status'), api('/api/shelly')]);
+      $('wifi-state').textContent = status.wifi_connected ? 'Connecté' : 'Hors ligne';
+      $('meter-state').textContent = shelly.measurement_valid ? 'Valide' : 'Indisponible';
+      $('charge-state').textContent = `${number(status.charge_limit)} A`;
+      const wallConnectorState =
+        status.wall_connector_connected
+          ? 'connectée'
+          : 'déconnectée';
+
+      $('device-details').textContent =
+        `${status.ip || 'Sans IP'} · ` +
+        `${shelly.model || 'Aucun Shelly détecté'} · ` +
+        `${shelly.measurement_valid
+            ? number(shelly.current) + ' A mesurés'
+            : 'Pas de mesure valide'} · ` +
+        `Borne Gen 3 : ${wallConnectorState}`;
+    } catch { $('device-details').textContent = 'État temporairement indisponible.'; }
+  }
+  async function scanNetworks() {
+    const button = $('scan'); button.disabled = true;
+    $('networks').replaceChildren(new Option('Recherche en cours…', ''));
+    try {
+      const networks = await api('/api/wifi/scan');
+      $('networks').replaceChildren(new Option('Choisir un réseau…', ''));
+      const seen = new Set();
+      for (const ap of networks) {
+        if (!ap.ssid || seen.has(ap.ssid)) continue;
+        seen.add(ap.ssid);
+        const option = new Option(`${ap.ssid} (${ap.rssi} dBm${ap.secured ? ', protégé' : ''})`, ap.ssid);
+        option.dataset.secured = String(ap.secured);
+        $('networks').add(option);
+      }
+      if (!seen.size) notice('Aucun réseau trouvé. Tu peux saisir le SSID manuellement.');
+    } catch (error) { notice(`Recherche Wi-Fi impossible : ${error.message}. Saisir le SSID manuellement.`, true); }
+    finally { button.disabled = false; }
+  }
+  async function discoverShelly() {
+    const button = $('discover'); button.disabled = true;
+    $('discovered-hosts').replaceChildren(new Option('Recherche en cours…', ''));
+    try {
+      const devices = await api('/api/shelly/discover');
+      $('discovered-hosts').replaceChildren(new Option('Choisir un Shelly…', ''));
+      for (const device of devices) {
+        if (!device.address) continue;
+        $('discovered-hosts').add(new Option(`${device.name || 'Shelly'} · ${device.address}`, device.address));
+      }
+      if (!devices.length) notice('Aucun Shelly trouvé par mDNS. Saisir son adresse IP si son réseau est différent.');
+    } catch (error) { notice(`Découverte Shelly impossible : ${error.message}. Saisir son adresse IP.`, true); }
+    finally { button.disabled = false; }
+  }
+  const favoritesKey = 'twc-shelly-hosts';
+  function favorites() {
+    try { const values = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+      return Array.isArray(values) ? values.filter(x => typeof x === 'string').slice(0, 8) : [];
+    } catch { return []; }
+  }
+  function updateHosts(active) {
+    const select = $('saved-hosts');
+    select.replaceChildren(new Option('Choisir une adresse…', ''));
+    for (const host of new Set([active, ...favorites()].filter(Boolean))) select.add(new Option(host, host));
+  }
+  $('networks').addEventListener('change', () => { if ($('networks').value) $('ssid').value = $('networks').value; });
+  $('saved-hosts').addEventListener('change', () => { if ($('saved-hosts').value) $('host').value = $('saved-hosts').value; });
+  $('scan').addEventListener('click', scanNetworks);
+  $('discover').addEventListener('click', discoverShelly);
+  $('discovered-hosts').addEventListener('change', () => { if ($('discovered-hosts').value) $('host').value = $('discovered-hosts').value; });
+  $('auth-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const candidate = $('admin-token').value.trim();
+    if (!/^[0-9a-fA-F]{32}$/.test(candidate)) {
+      notice('Le jeton doit contenir exactement 32 caractères hexadécimaux.', true); return;
+    }
+    adminToken = candidate.toLowerCase();
+    sessionStorage.setItem('twc-admin-token', adminToken);
+    try {
+      await loadConfig();
+      await refreshStatus();
+      notice('Accès administrateur déverrouillé pour cet onglet.');
+    } catch (error) {
+      sessionStorage.removeItem('twc-admin-token'); adminToken = '';
+      notice(`Authentification refusée : ${error.message}`, true);
+    }
+  });
+  $('wifi-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const ssid = $('ssid').value.trim(); const password = $('password').value;
+    const current = await api('/api/config').catch(() => null);
+    if (!current) { notice('Configuration actuelle indisponible.', true); return; }
+    const selected = $('networks').selectedOptions[0];
+    if (ssid !== current.wifi_ssid && selected?.value === ssid &&
+        selected.dataset.secured === 'true' && !password) {
+      notice('Ce réseau est protégé : saisir son mot de passe.', true); return;
+    }
+    const changes = {wifi_ssid:ssid};
+    if (password || ssid !== current.wifi_ssid) changes.wifi_password = password;
+    await save($('wifi-form'), changes,
+      'Wi-Fi enregistré. Si la page se déconnecte, ouvrir la nouvelle adresse IP du contrôleur.');
+    $('password').value = '';
+  });
+  $('shelly-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const host = $('host').value.trim();
+    if (!host) { notice('Saisir une adresse Shelly.', true); return; }
+    await save($('shelly-form'), {shelly_host:host, shelly_phase:Number($('shelly-phase').value)},
+      'Adresse Shelly enregistrée. La détection redémarre en arrière-plan.');
+    try { localStorage.setItem(favoritesKey, JSON.stringify([host, ...favorites().filter(x=>x!==host)].slice(0,8))); }
+    catch { /* Saving browser favorites is optional. */ }
+    updateHosts(host);
+    setTimeout(refreshStatus, 4000);
+  });
+  $('ota-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const file = $('firmware').files[0];
+    if (!file || !adminToken) { notice('Choisir le firmware et déverrouiller l’accès administrateur.', true); return; }
+    const button = $('ota-submit'); button.disabled = true;
+    try {
+      const response = await fetch('/api/ota/firmware', {
+        method:'POST', headers:{'Content-Type':'application/octet-stream',Authorization:`Bearer ${adminToken}`}, body:file
+      });
+      if (!response.ok) throw new Error((await response.text()) || `HTTP ${response.status}`);
+      notice('Firmware reçu. Le contrôleur redémarre ; patienter puis recharger la page.');
+    } catch (error) { notice(`Mise à jour refusée : ${error.message}`, true); button.disabled = false; }
+  });
+  $('limits-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const breaker = Number($('breaker').value), minimum = Number($('minimum').value), maximum = Number($('maximum').value);
+    if (![breaker,minimum,maximum].every(Number.isInteger) || breaker < 6 || breaker > 63 ||
+        minimum < 6 || maximum > 32 || maximum < minimum || maximum > breaker) {
+      notice('Limites invalides : 6 ≤ minimum ≤ maximum ≤ 32 A et maximum ≤ disjoncteur ≤ 63 A.', true); return;
+    }
+    await save($('limits-form'), {breaker_limit:breaker, charger_min_current:minimum, charger_max_current:maximum},
+      'Limites enregistrées.');
+    refreshStatus();
+  });
+  if (adminToken) {
+    loadConfig().catch(error => notice(`Configuration indisponible : ${error.message}`, true));
+    refreshStatus();
+  } else {
+    notice('Saisir le jeton administrateur affiché sur la console série.');
+  }
+  setInterval(() => { if (adminToken) refreshStatus(); }, 5000);
+</script>
+</body>
+</html>

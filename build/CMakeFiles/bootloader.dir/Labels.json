@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "K:/VSCode/twc-controller - Copie/build/CMakeFiles/bootloader"
+		},
+		{
+			"file" : "K:/VSCode/twc-controller - Copie/build/CMakeFiles/bootloader.rule"
+		},
+		{
+			"file" : "K:/VSCode/twc-controller - Copie/build/CMakeFiles/bootloader-complete.rule"
+		},
+		{
+			"file" : "K:/VSCode/twc-controller - Copie/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
+		},
+		{
+			"file" : "K:/VSCode/twc-controller - Copie/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
+		},
+		{
+			"file" : "K:/VSCode/twc-controller - Copie/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
+		},
+		{
+			"file" : "K:/VSCode/twc-controller - Copie/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
+		},
+		{
+			"file" : "K:/VSCode/twc-controller - Copie/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
+		},
+		{
+			"file" : "K:/VSCode/twc-controller - Copie/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
+		},
+		{
+			"file" : "K:/VSCode/twc-controller - Copie/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"bootloader"
+		],
+		"name" : "bootloader"
+	}
+}
